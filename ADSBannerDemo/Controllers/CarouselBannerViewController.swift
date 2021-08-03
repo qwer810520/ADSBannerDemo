@@ -10,6 +10,7 @@ import UIKit
 class CarouselBannerViewController: UIViewController {
 
   private var demoDatas: [Int] = [1, 2, 3]
+  private var timer: Timer?
 
   lazy private var bannerView: CarouselBannerView = {
     return CarouselBannerView(delegate: self)
@@ -37,6 +38,8 @@ class CarouselBannerViewController: UIViewController {
   override func viewDidAppear(_ animated: Bool) {
     super.viewDidAppear(animated)
     bannerView.scrollToFirstItem()
+
+    startTimer()
   }
 
   // MARK: - Private Methods
@@ -67,6 +70,17 @@ class CarouselBannerViewController: UIViewController {
   // MARK: - CarouselBannerViewDelegate
 
 extension CarouselBannerViewController: CarouselBannerViewDelegate {
+  func stopTimer() {
+    timer?.invalidate()
+    timer = nil
+  }
+
+  func startTimer() {
+    timer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true, block: { [weak self] _ in
+      self?.bannerView.scrollToNextItem()
+    })
+  }
+
   func numberOfDataCount() -> Int {
     return demoDatas.count + 2
   }

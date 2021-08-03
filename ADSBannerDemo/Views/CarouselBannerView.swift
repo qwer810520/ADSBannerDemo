@@ -10,6 +10,9 @@ import UIKit
 protocol CarouselBannerViewDelegate: class {
   func numberOfDataCount() -> Int
   func findData(with index: Int) -> String
+
+  func stopTimer()
+  func startTimer()
 }
 
 class CarouselBannerView: UIView {
@@ -44,7 +47,7 @@ class CarouselBannerView: UIView {
     return delegate?.numberOfDataCount() ?? 0
   }
 
-  private var beginDraggingIndex: CGFloat = 0
+  private var beginDraggingIndex: CGFloat = 1
 
   // MARK: - Initialization
 
@@ -61,6 +64,23 @@ class CarouselBannerView: UIView {
   func scrollToFirstItem() {
     scrollToItem(with: 1)
     pageControl.currentPage = 0
+  }
+
+  func scrollToNextItem() {
+    print("\(#function), beginDraggingIndex: \(beginDraggingIndex)")
+    scrollToItem(with: Int(beginDraggingIndex), animated: true)
+    changePageControl(with: beginDraggingIndex)
+
+    switch beginDraggingIndex {
+      case CGFloat(dataCount - 1):
+        beginDraggingIndex = 2
+
+        Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { [weak self] _ in
+          self?.scrollToItem(with: 1)
+        }
+      default:
+        beginDraggingIndex += 1
+    }
   }
 
   // MARK: - Private Methods
@@ -106,13 +126,12 @@ class CarouselBannerView: UIView {
     pageControl.currentPage = 0
   }
 
-  private func scrollToItem(with item: Int) {
+  private func scrollToItem(with item: Int, animated: Bool = false) {
     guard let point = collectionView.layoutAttributesForItem(at: .init(item: item, section: 0))?.frame.origin else { return }
-    collectionView.setContentOffset(point, animated: false)
+    collectionView.setContentOffset(point, animated: animated)
   }
 
   private func changePageControl(with index: CGFloat) {
-    guard index != beginDraggingIndex else { return }
     switch lroundl(Double(index)) {
       case 0:
         pageControl.currentPage = dataCount - 2
@@ -137,6 +156,8 @@ extension CarouselBannerView: UICollectionViewDelegateFlowLayout {
 
   func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
     beginDraggingIndex = scrollView.contentOffset.x / frame.width
+    
+    delegate?.stopTimer()
   }
 
   func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
@@ -154,12 +175,8 @@ extension CarouselBannerView: UICollectionViewDelegateFlowLayout {
         scrollView.setContentOffset(.init(x: x, y: 0), animated: false)
       default: break
     }
-  }
 
-  func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
-    print("\(#function), decelerate: \(decelerate), contentOfSet: \(scrollView.contentOffset.x)")
-    guard !decelerate else { return }
-    print("scrollViewDidEndDragging doSomething")
+    delegate?.startTimer()
   }
 }
 
