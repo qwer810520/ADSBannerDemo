@@ -44,6 +44,8 @@ class CarouselBannerView: UIView {
     return delegate?.numberOfDataCount() ?? 0
   }
 
+  private var beginDraggingIndex: CGFloat = 0
+
   // MARK: - Initialization
 
   init(delegate: CarouselBannerViewDelegate? = nil) {
@@ -109,6 +111,17 @@ class CarouselBannerView: UIView {
     collectionView.setContentOffset(point, animated: false)
   }
 
+  private func changePageControl(with index: CGFloat) {
+    guard index != beginDraggingIndex else { return }
+    switch lroundl(Double(index)) {
+      case 0:
+        pageControl.currentPage = dataCount - 2
+      case dataCount - 1:
+        pageControl.currentPage = 0
+      default:
+        pageControl.currentPage = Int(index) - 1
+    }
+  }
 }
 
   // MARK: - UICollectionViewDelegateFlowLayout
@@ -121,17 +134,43 @@ extension CarouselBannerView: UICollectionViewDelegateFlowLayout {
   func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
     return 0
   }
+
+  func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+    beginDraggingIndex = scrollView.contentOffset.x / frame.width
+  }
+
+  func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+    let contentOffSetX = scrollView.contentOffset.x
+    let nextIndex = contentOffSetX / frame.width
+
+    changePageControl(with: nextIndex)
+
+    switch nextIndex {
+      case 0:
+        let x = frame.width * 3
+        scrollView.setContentOffset(.init(x: x, y: 0), animated: false)
+      case CGFloat(dataCount - 1):
+        let x = frame.width
+        scrollView.setContentOffset(.init(x: x, y: 0), animated: false)
+      default: break
+    }
+  }
+
+  func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+    print("\(#function), decelerate: \(decelerate), contentOfSet: \(scrollView.contentOffset.x)")
+    guard !decelerate else { return }
+    print("scrollViewDidEndDragging doSomething")
+  }
 }
 
   // MARK: - UICollectionViewDataSource
 
 extension CarouselBannerView: UICollectionViewDataSource {
   func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-    return dataCount + 2
+    return dataCount
   }
 
   func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-    print(#function)
     guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: DemoCell.identifier, for: indexPath) as? DemoCell else {
       fatalError("Cell init failure")
     }
