@@ -16,6 +16,7 @@ class DemoCell: UICollectionViewCell {
       titleLable.text = title
 
       var backgroundColor: UIColor = .clear
+
       switch title {
         case "1":
           backgroundColor = .systemRed
@@ -23,7 +24,8 @@ class DemoCell: UICollectionViewCell {
           backgroundColor = .systemGreen
         case "3":
           backgroundColor = .systemBlue
-        default: break
+        default:
+          backgroundColor = .black
       }
 
       contentView.backgroundColor = backgroundColor
